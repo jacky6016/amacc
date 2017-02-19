@@ -10,6 +10,11 @@
 #include <fcntl.h>
 #include <dlfcn.h>
 
+// DynASM directives.
+|.arch arm
+|.actionlist actions
+#define Dst &state
+
 char *p, *lp;         // current position in source code
 char *data, *_data;   // data/bss pointer
 char *ops;            // opcodes
@@ -1471,6 +1476,27 @@ int elf32(int poolsz, int *main)
     memcpy(dseg, pt_dyn, 0x1000);
     write(elf_fd, buf, o - buf);
     return 0;
+}
+
+int *dynasm_jit()
+{
+	initjit(&state, actions);
+	dasm_State *state;
+	
+	// Dynasm code here
+
+	
+	// Link the code and write it to executable memory.
+    int (*fptr)() = jitcode(&state);
+	
+	// Call the JIT-ted function.
+	int ret = fptr();
+	assert(num == ret);
+	
+	// Free the machine code.
+	free_jitcode(fptr);
+	
+	return ret;
 }
 
 enum { _O_CREAT = 64, _O_WRONLY = 1 };
